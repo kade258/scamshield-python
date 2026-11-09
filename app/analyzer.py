@@ -109,9 +109,29 @@ LOOKALIKE_PATTERN = re.compile(
 SHORTENERS = {"bit.ly", "tinyurl.com", "t.co", "rb.gy", "is.gd"}
 
 
-def _excerpt(content: str, match: re.Match[str]) -> str:
-    start = max(0, match.start() - 30)
-    return re.sub(r"\s+", " ", content[start : start + 120]).strip()
+def _excerpt(content: str, match: re.Match[str], limit: int = 160) -> str:
+    """Return the sentence around a match without cutting through words."""
+    sentence_breaks = ".!?\n"
+    start = max(content.rfind(mark, 0, match.start()) for mark in sentence_breaks) + 1
+    end_candidates = [content.find(mark, match.end()) for mark in sentence_breaks]
+    end_candidates = [position + 1 for position in end_candidates if position != -1]
+    end = min(end_candidates, default=len(content))
+    excerpt = re.sub(r"\s+", " ", content[start:end]).strip()
+
+    if len(excerpt) <= limit:
+        return excerpt
+
+    match_offset = match.start() - start
+    crop_start = max(0, match_offset - 45)
+    if crop_start:
+        next_space = excerpt.find(" ", crop_start)
+        crop_start = next_space + 1 if next_space != -1 else crop_start
+    cropped = excerpt[crop_start : crop_start + limit].strip()
+    if crop_start + limit < len(excerpt):
+        last_space = cropped.rfind(" ")
+        if last_space > 0:
+            cropped = cropped[:last_space]
+    return cropped
 
 
 def _check_link(raw_url: str) -> LinkCheck:
@@ -147,11 +167,22 @@ def _check_link(raw_url: str) -> LinkCheck:
     )
 
 
-def _risk_label(score: int) -> tuple[str, str]:
+def _risk_label(score: int, findings: list[Finding]) -> tuple[str, str]:
     if score >= 70:
         return "High risk", "Strong signs of impersonation or manipulation."
     if score >= 35:
         return "Suspicious", "Several details deserve verification."
+    domain_warning = next(
+        (
+            finding
+            for finding in findings
+            if finding.label in {"High-risk link pattern", "Suspicious sender domain"}
+        ),
+        None,
+    )
+    if domain_warning:
+        subject = "link domain" if domain_warning.label == "High-risk link pattern" else "sender domain"
+        return "Suspicious", f"Limited evidence — suspicious {subject} detected."
     return "Low risk", "Few common scam signals were detected."
 
 
@@ -230,7 +261,7 @@ def analyze_message(content: str) -> dict:
         )
 
     score = min(100, sum(finding.points for finding in findings))
-    level, summary = _risk_label(score)
+    level, summary = _risk_label(score, findings)
     kind = _message_type(content)
     if not findings:
         findings.append(

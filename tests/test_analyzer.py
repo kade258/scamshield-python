@@ -73,3 +73,32 @@ def test_email_in_message_body_is_not_treated_as_sender():
         "Contact account@support.example.com if you have questions about this ordinary meeting."
     )
     assert result["senderChecks"] == []
+
+
+def test_link_only_warning_is_not_labeled_low_risk():
+    result = analyze_message("https://paypa1-secure-login.example/verify")
+    assert result["score"] == 20
+    assert result["level"] == "Suspicious"
+    assert result["summary"] == "Limited evidence — suspicious link domain detected."
+    assert result["links"][0]["status"] == "warning"
+
+
+def test_security_topic_without_pressure_is_not_scored():
+    result = analyze_message(
+        "Our security team published the monthly account safety guide in the staff handbook."
+    )
+    assert result["score"] == 0
+    assert result["level"] == "Low risk"
+
+
+def test_evidence_excerpt_starts_on_a_word_boundary():
+    result = analyze_message(
+        "This introduction contains several ordinary words before the request. "
+        "Please act now to review the account notice before tomorrow."
+    )
+    evidence = next(
+        item["evidence"]
+        for item in result["findings"]
+        if item["label"] == "Artificial urgency"
+    )
+    assert evidence.startswith("Please act now")
