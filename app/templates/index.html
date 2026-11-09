@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Explainable scam-risk checks for suspicious messages.">
+  <title>ScamShield — Check suspicious messages</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%230b211d'/%3E%3Cpath d='M32 10 50 17v14c0 11-7.5 19-18 23C21.5 50 14 42 14 31V17l18-7Z' fill='%2343e5a1'/%3E%3Cpath d='m23 32 6 6 13-14' fill='none' stroke='%23062019' stroke-width='5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="/" aria-label="ScamShield home"><span class="brand-mark">✓</span><strong>ScamShield</strong><span class="private">Private scan</span></a>
+    <button id="historyButton" class="quiet-button"><span aria-hidden="true">◷</span> Scan history</button>
+  </header>
+
+  <main id="scannerView" class="shell">
+    <section class="intro">
+      <div><p class="eyebrow">✦ Explainable threat check</p><h1>Check it before you trust it.</h1><p>Paste the full message. ScamShield identifies pressure tactics, suspicious requests, and risky domains—and shows how each signal affects the score.</p></div>
+      <p class="privacy">▣ Saved locally to your scan history</p>
+    </section>
+
+    <div class="workspace">
+      <section class="panel composer">
+        <div class="panel-head"><strong>✉ Suspicious content</strong><button id="sampleButton" class="text-button">Use sample</button></div>
+        <div class="panel-body">
+          <textarea id="content" aria-label="Suspicious message" maxlength="25000" placeholder="Paste an email, text message, or job listing…"></textarea>
+          <div class="composer-foot"><span id="status">0 characters</span><div><button id="clearButton" class="quiet-button hidden">↻ Clear</button><button id="analyzeButton" class="primary-button" disabled>⌕ Analyze message</button></div></div>
+        </div>
+      </section>
+
+      <section id="resultPanel" class="panel result-panel" aria-live="polite">
+        <div id="emptyResult" class="empty-result"><div class="shield">?</div><h2>Your result will explain itself</h2><p>Every score is broken into warning signs, quoted evidence, and point values—so you can judge the message, not just trust a number.</p><div class="mini-grid"><span>⚠<small>Tactics</small></span><span>⌁<small>Domains</small></span><span>✓<small>Evidence</small></span></div></div>
+        <div id="filledResult" class="hidden">
+          <div class="score-head"><div id="scoreRing" class="score-ring"><div><strong id="scoreValue">0</strong><small>out of 100</small></div></div><div><p id="riskLevel" class="risk-level"></p><h2 id="summary"></h2><p id="signalSummary" class="muted"></p></div></div>
+          <div class="tabs" role="tablist"><button class="tab active" data-tab="signals">Warning signs <span id="findingCount"></span></button><button class="tab" data-tab="links">Links & sender domains <span id="linkCount"></span></button></div>
+          <div id="signals" class="tab-panel"><div class="list-head"><span>Why this score?</span><span>Points added</span></div><div id="findings"></div><p class="disclaimer">Scores indicate risk signals—not certainty. Verify requests through a trusted phone number, app, or website you navigate to yourself.</p></div>
+          <div id="links" class="tab-panel hidden"><div id="linkChecks"></div></div>
+        </div>
+      </section>
+    </div>
+
+    <section class="safety-grid" aria-label="Safety tips"><article><b>▣ Pause before acting</b><p>Don’t click, reply, pay, or share a code while someone is pressuring you.</p></article><article><b>⌕ Verify independently</b><p>Open the official app or type the known website address yourself.</p></article><article><b>↗ Report the message</b><p>Use your email or messaging app’s report option, then block the sender.</p></article></section>
+  </main>
+
+  <main id="historyView" class="history-shell hidden">
+    <section class="history-title"><div><p class="eyebrow">Previous checks</p><h1>Your scan history</h1></div><span id="historyCount">0 saved</span></section>
+    <div id="historyList"></div>
+  </main>
+
+  <script src="/static/app.js" defer></script>
+</body>
+</html>
